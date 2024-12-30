@@ -26,19 +26,12 @@ Route::controller(UserController::class)->prefix('auth')->group(function () {
     Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::delete('/delete/{user}', 'delete');
     });
-
-    // Route::middleware('auth:sanctum')->group(function () {
-    //     Route::get('/users', 'index');
-    //     Route::get('/logout', 'invalidateLogin');
-    //     Route::get('/logout', 'logout');
-    //     Route::put('/update/{id}', 'update');
-    //     Route::post('/update-password/{id}', 'updatePassword');
-    // });
 });
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::controller(UserController::class)->group(function () {
+        Route::get('/logout', 'logout');
         Route::put('/update/{id}', 'update');
-        // Add more related routes here as needed
     });
 });
 

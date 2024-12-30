@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('first_name');
             $table->string('last_name');
             $table->string('profile_picture');
-            $table->string('status');
+            $table->tinyInteger('status')->default(1);
             $table->string('role')->default('user');
             $table->rememberToken();
             $table->timestamps();

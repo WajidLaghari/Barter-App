@@ -44,7 +44,7 @@ class UserController extends Controller
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
                 'profile_picture' => $profilePicturePath,
-                'status' => 'active',
+                'status' => 1,
                 'role' => 'user'
             ]);
 
@@ -80,8 +80,11 @@ class UserController extends Controller
                 return $this->errorResponse(Status::UNAUTHORIZED, 'Invalid credentials');
             }
 
-            if (!$user->active) {
-                return $this->errorResponse(Status::FORBIDDEN, 'Your account is not active. Please contact support.');
+            // if (!$user->active) {
+            //     return $this->errorResponse(Status::FORBIDDEN, 'Your account is not active. Please contact support.');
+            // }
+            if ($user->status !== 1) { // Check if the user exists
+                return $this->errorResponse(Status::FORBIDDEN, 'User does not exist. Please contact support.');
             }
 
             $token = $user->createToken('auth_token')->plainTextToken;
@@ -97,7 +100,6 @@ class UserController extends Controller
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
         }
     }
-
 
     public function logout(Request $request)
     {
