@@ -22,9 +22,17 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::controller(UserController::class)->prefix('auth')->group(function () {
     Route::post('/login', 'login');
     Route::post('/register', 'register');
+});
+
+Route::controller(UserController::class)->group(function () {
 
     Route::middleware(['auth:sanctum', 'admin'])->group(function () {
-        Route::delete('/delete/{user}', 'delete');
+        Route::get('/show-users', 'index');
+        Route::get('/specified-user/{id}', 'show');
+        Route::delete('/delete/{id}', 'delete');
+        Route::get('/inactive-users', 'inactiveUsers');
+        Route::put('/restore-user/{id}', 'restoreUser');
+        Route::delete('/permenant-delete-user/{id}', 'permanentDeleteUser');
     });
 });
 
@@ -32,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(UserController::class)->group(function () {
         Route::get('/logout', 'logout');
         Route::put('/update/{id}', 'update');
+        Route::put('/update-password/{id}', 'updatePassword');
     });
 });
 

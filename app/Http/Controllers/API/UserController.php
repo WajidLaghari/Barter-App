@@ -17,6 +17,21 @@ class UserController extends Controller
 {
     use ApiResponse;
 
+    public function index()
+    {
+        try {
+            $users = User::where('role', '!=', 'admin')->where('status', 1)->get();
+
+            if ($users->isEmpty()) {
+                return $this->errorResponse(Status::NOT_FOUND, 'No users found');
+            }
+
+            return $this->successResponse(Status::OK, 'Users retrieved successfully', compact('users'));
+        } catch (\Exception $e) {
+            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+        }
+    }
+
     public function register(Request $request)
     {
         try {
@@ -80,11 +95,8 @@ class UserController extends Controller
                 return $this->errorResponse(Status::UNAUTHORIZED, 'Invalid credentials');
             }
 
-            // if (!$user->active) {
-            //     return $this->errorResponse(Status::FORBIDDEN, 'Your account is not active. Please contact support.');
-            // }
             if ($user->status !== 1) { // Check if the user exists
-                return $this->errorResponse(Status::FORBIDDEN, 'User does not exist. Please contact support.');
+                return $this->errorResponse(Status::FORBIDDEN, 'Account does not exist. Please contact support.');
             }
 
             $token = $user->createToken('auth_token')->plainTextToken;
@@ -151,6 +163,125 @@ class UserController extends Controller
             return $this->successResponse(Status::OK, 'User updated successfully', compact('user'));
         } catch (\Illuminate\Database\QueryException $e) {
             return $this->errorResponse(Status::INVALID_REQUEST, 'Email or username already exists');
+        } catch (\Exception $e) {
+            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+        }
+    }
+
+    public function show($id)
+    {
+        try {
+            $user = User::find($id);
+
+            if (!$user) {
+                return $this->errorResponse(Status::NOT_FOUND, 'User not found');
+            }
+
+            return $this->successResponse(Status::OK, 'User retrieved successfully', compact('user'));
+        } catch (\Exception $e) {
+            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+        }
+    }
+
+    public function delete($id)
+    {
+        try {
+            $user = User::find($id);
+
+            if (!$user) {
+                return $this->errorResponse(Status::NOT_FOUND, 'User not found');
+            }
+
+            $user->status = 0;
+            $user->save();
+
+            $user->delete();
+
+            return $this->successResponse(Status::OK, 'User status updated to inactive');
+        } catch (\Exception $e) {
+            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+        }
+    }
+
+    public function inactiveUsers()
+    {
+        try {
+            $trashedUsers = User::onlyTrashed()->get();
+
+            if ($trashedUsers->isEmpty()) {
+                return $this->errorResponse(Status::NOT_FOUND, 'No User found');
+            }
+
+            return $this->successResponse(Status::OK, 'Inactive users retrieved successfully', compact('trashedUsers'));
+        } catch (\Exception $e) {
+            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+        }
+    }
+
+    public function restoreUser($id)
+    {
+        try {
+            $user = User::withTrashed()->find($id);
+
+            if (!$user) {
+                return $this->errorResponse(Status::NOT_FOUND, 'User not found');
+            }
+
+            $user->restore();
+
+            $user->status = 1;
+            $user->save();
+
+            return $this->successResponse(Status::OK, 'User restored and activated successfully');
+        } catch (\Exception $e) {
+            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+        }
+    }
+
+    public function permanentDeleteUser($id)
+    {
+        try {
+            $user = User::withTrashed()->find($id);
+
+            if (!$user) {
+                return $this->errorResponse(Status::NOT_FOUND, 'User not found');
+            }
+
+            if ($user->profile_picture && File::exists(public_path($user->profile_picture))) {
+                File::delete(public_path($user->profile_picture));
+            }
+
+            $user->forceDelete();
+
+            return $this->successResponse(Status::OK, 'User permanently deleted');
+        } catch (\Exception $e) {
+            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+        }
+    }
+
+    public function updatePassword(Request $request)
+    {
+        try {
+            $validation = Validator::make($request->all(), [
+                'old_password' => 'required|string',
+                'new_password' => 'required|string|min:8|different:old_password',
+                'confirm_new_password' => 'required|string|same:new_password',
+            ]);
+
+            if ($validation->fails()) {
+                return $this->errorResponse(Status::INVALID_REQUEST, Message::VALIDATION_FAILURE, $validation->errors()->toArray());
+            }
+
+            $user = Auth::user();
+
+            if (!Hash::check($request->old_password, $user->password)) {
+                return $this->errorResponse(Status::UNAUTHORIZED, 'Old password is incorrect');
+            }
+
+            $user->password = Hash::make($request->new_password);
+            $user->save();
+
+            return $this->successResponse(Status::OK, 'Password updated successfully');
         } catch (\Exception $e) {
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
         }
