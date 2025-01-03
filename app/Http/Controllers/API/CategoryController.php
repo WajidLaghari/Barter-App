@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\API;
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use App\Http\Utils\Message;
 use App\Http\Utils\Status;
 use Illuminate\Support\Facades\Validator;
@@ -55,12 +56,10 @@ class CategoryController extends Controller
                 'description' => $request->description,
             ]);
 
-            return $this->successResponse(Status::OK, 'Category was added successfully', compact('category'));
-        } catch (\Illuminate\Database\QueryException $e) {
-            return $this->errorResponse(Status::INVALID_REQUEST, 'Category name already exists');
-        } catch (\Exception $e) {
-            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
-        }
+        return $this->successResponse(Status::OK, 'Category was added successfully', compact('category'));
+    } catch (\Exception $e) {
+        return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+    }
     }
 
     /**

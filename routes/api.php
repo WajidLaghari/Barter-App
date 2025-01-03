@@ -1,7 +1,8 @@
 <?php
 
+use App\Http\Controllers\API\ItemController;
 use App\Http\Controllers\API\UserController;
-use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\API\CategoryController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -46,4 +47,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/update-password/{id}', 'updatePassword');
     });
 });
+
+Route::apiResource('items', ItemController::class)->middleware(['auth:sanctum']);
 
