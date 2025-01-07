@@ -50,8 +50,10 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function item()
+    public function offers()
     {
-        return $this->hasMany(User::class);
+        return $this->hasMany(Offer::class, 'offered_by');
     }
+
+
 }

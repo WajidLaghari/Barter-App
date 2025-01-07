@@ -16,7 +16,7 @@ class Item extends Model
     ];
 
     protected $casts = [
-        'images' => 'array', // Cast the JSON column to an array
+        'images' => 'array', /*Cast the JSON column to an array*/
     ];
 
     public function user()
@@ -28,4 +28,15 @@ class Item extends Model
     {
         return $this->belongsTo(Item::class);
     }
+
+    public function offersAsItem()
+    {
+        return $this->hasMany(Offer::class, 'item_id');
+    }
+
+    public function offersAsOfferedItem()
+    {
+        return $this->hasMany(Offer::class, 'offered_item_id');
+    }
+
 }
