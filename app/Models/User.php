@@ -27,7 +27,9 @@ class User extends Authenticatable
         'first_name',
         'last_name',
         'profile_picture',
-        'status'
+        'status',
+        'role',
+        'is_verified'
     ];
 
     /**

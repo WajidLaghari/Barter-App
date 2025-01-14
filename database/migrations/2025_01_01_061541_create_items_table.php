@@ -21,6 +21,7 @@ return new class extends Migration
             $table->decimal('price_estimate', 10, 2);
             $table->json('images');
             $table->enum('status', ['stock', 'out of stock', 'sold'])->default('stock');
+            $table->enum('is_Approved', ['pending','approved', 'rejected'])->default('pending');
             $table->timestamps();
             $table->softDeletes();
         });

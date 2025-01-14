@@ -12,7 +12,7 @@ class Item extends Model
 
     protected $fillable = [
         'user_id', 'category_id', 'title', 'description', 'location',
-        'price_estimate', 'images', 'status',
+        'price_estimate', 'images', 'status','is_Approved'
     ];
 
     protected $casts = [
@@ -21,12 +21,12 @@ class Item extends Model
 
     public function user()
     {
-        return $this->belongsTo(Item::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function category()
     {
-        return $this->belongsTo(Item::class);
+        return $this->belongsTo(Category::class, 'category_id');
     }
 
     public function offersAsItem()

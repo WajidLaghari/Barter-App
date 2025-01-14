@@ -31,9 +31,10 @@ class ItemController extends Controller
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
         }
     }
+
     /**
-     * Store a newly created resource in storage.
-     */
+    * Store a newly created resource in storage.
+    */
     public function store(Request $request)
     {
         try {
@@ -77,7 +78,8 @@ class ItemController extends Controller
                 'location' => $request->location,
                 'price_estimate' => $request->price_estimate,
                 'images' => json_encode($uploadedImages),
-                'status' => 'stock'
+                'status' => 'stock',
+                'is_Approved' => 'pending'
             ]);
 
             return $this->successResponse(Status::OK, 'Item created successfully', compact('item'));
@@ -89,8 +91,8 @@ class ItemController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
+    * Display the specified resource.
+    */
     public function show(string $id)
     {
         try {
@@ -106,10 +108,9 @@ class ItemController extends Controller
         }
     }
 
-
     /**
-     * Update the specified resource in storage.
-     */
+    * Update the specified resource in storage.
+    */
     public function update(Request $request, string $id)
     {
         try {
@@ -119,7 +120,6 @@ class ItemController extends Controller
                 return $this->errorResponse(Status::NOT_FOUND, 'Item not found');
             }
 
-            // Validate input
             $validation = Validator::make($request->all(), [
                 'category_id' => 'sometimes|exists:categories,id',
                 'title' => 'sometimes|string|max:255',
@@ -168,7 +168,7 @@ class ItemController extends Controller
                 'location' => $request->get('location', $item->location),
                 'price_estimate' => $request->get('price_estimate', $item->price_estimate),
                 'images' => json_encode($uploadedImages),
-                'status' => $request->get('status', $item->status), // Update status if provided
+                'status' => $request->get('status', $item->status),
                 'available_until' => $request->get('available_until', $item->available_until),
             ]);
 
@@ -181,8 +181,8 @@ class ItemController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+    * Remove the specified resource from storage.
+    */
     public function destroy(string $id)
     {
         try {

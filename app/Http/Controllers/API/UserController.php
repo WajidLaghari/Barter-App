@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
 use App\Http\Utils\ApiResponse;
+use App\Models\Item;
 use App\Models\User;
 
 class UserController extends Controller
@@ -20,13 +21,53 @@ class UserController extends Controller
     public function index()
     {
         try {
-            $users = User::where('role', '!=', 'admin')->where('status', 1)->get();
-
-            if ($users->isEmpty()) {
-                return $this->errorResponse(Status::NOT_FOUND, 'No users found');
-            }
+            $users = User::where('role', '!=', 'admin')->where('status', 0)->get();
 
             return $this->successResponse(Status::OK, 'Users retrieved successfully', compact('users'));
+        } catch (\Exception $e) {
+            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+        }
+    }
+
+    public function createSubAdmin(Request $request)
+    {
+        try {
+
+            if (Auth::user()->role !== 'admin') {
+                return $this->errorResponse(Status::FORBIDDEN, 'Only admins can create sub-admins.');
+            }
+
+            $validation = Validator::make($request->all(), [
+                'username' => 'required|string|unique:users',
+                'email' => 'required|string|email|unique:users',
+                'password' => ['required', 'min:8'],
+                'confirm_password' => ['required', 'same:password'],
+                'first_name' => 'required|string',
+                'last_name' => 'required|string',
+                'profile_picture' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            ]);
+
+            if ($validation->fails()) {
+                return $this->errorResponse(Status::INVALID_REQUEST, Message::VALIDATION_FAILURE, $validation->errors()->toArray());
+            }
+
+            $profilePicture = $request->file('profile_picture');
+            $profilePicturePath = 'uploads/' . basename($profilePicture->move(public_path('uploads'), $profilePicture->hashName()));
+
+            $user = User::create([
+                'username' => $request->username,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'profile_picture' => $profilePicturePath,
+                'status' => 0,
+                'role' => 'subAdmin'
+            ]);
+
+            return $this->successResponse(Status::OK, 'user registration was successfully', compact('user'));
+        } catch (\Illuminate\Database\QueryException $e) {
+            return $this->errorResponse(Status::INVALID_REQUEST, 'Email already exists');
         } catch (\Exception $e) {
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
         }
@@ -59,7 +100,7 @@ class UserController extends Controller
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
                 'profile_picture' => $profilePicturePath,
-                'status' => 1,
+                'status' => 0,
                 'role' => 'user'
             ]);
 
@@ -95,7 +136,7 @@ class UserController extends Controller
                 return $this->errorResponse(Status::UNAUTHORIZED, 'Invalid credentials');
             }
 
-            if ($user->status !== 1) { // Check if the user exists
+            if ($user->status !== 0) {
                 return $this->errorResponse(Status::FORBIDDEN, 'Account does not exist. Please contact support.');
             }
 
@@ -192,7 +233,7 @@ class UserController extends Controller
                 return $this->errorResponse(Status::NOT_FOUND, 'User not found');
             }
 
-            $user->status = 0;
+            $user->status = 1;
             $user->save();
 
             $user->delete();
@@ -282,6 +323,48 @@ class UserController extends Controller
             $user->save();
 
             return $this->successResponse(Status::OK, 'Password updated successfully');
+        } catch (\Exception $e) {
+            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+        }
+    }
+
+    public function showItems(Request $request)
+    {
+        try {
+
+            if (!in_array(auth()->user()->role, ['admin', 'subAdmin'])) {
+                return $this->errorResponse(Status::FORBIDDEN, 'Only admins or sub-admins can view pending items.');
+            }
+
+            $items = Item::with(['user', 'category'])->where('is_Approved', 'pending')->get();
+
+            return $this->successResponse(Status::OK, 'Pending items retrieved successfully', compact('items'));
+        } catch (\Exception $e) {
+            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+        }
+    }
+
+    public function isApproved(Request $request, $itemId)
+    {
+        try {
+            if (!in_array(auth()->user()->role, ['admin', 'subAdmin'])) {
+                return $this->errorResponse(Status::FORBIDDEN, 'Only admins or sub admin can approved the item.');
+            }
+
+            $request->validate([
+                'is_approved' => 'required|in:approved,rejected',
+            ]);
+
+            $item = Item::find($itemId);
+
+            if (!$item) {
+                return $this->errorResponse(Status::NOT_FOUND, 'item not found');
+            }
+
+            $item->is_Approved = $request->is_approved;
+            $item->save();
+
+            return $this->successResponse(Status::OK, 'Item has been ' . $request->is_Approved, compact('item'));
         } catch (\Exception $e) {
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
         }

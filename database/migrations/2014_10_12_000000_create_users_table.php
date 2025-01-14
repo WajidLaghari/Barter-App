@@ -21,7 +21,8 @@ return new class extends Migration
             $table->string('last_name');
             $table->string('profile_picture');
             $table->tinyInteger('status')->default(1);
-            $table->string('role')->default('user');
+            $table->enum('role', ['admin','subAdmin', 'user']);
+            $table->boolean('is_verified')->default(0);
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();
