@@ -18,12 +18,23 @@ class UserController extends Controller
 {
     use ApiResponse;
 
-    public function index()
+    public function showUsers()
     {
         try {
             $users = User::where('role', '!=', 'admin')->where('status', 0)->get();
 
             return $this->successResponse(Status::OK, 'Users retrieved successfully', compact('users'));
+        } catch (\Exception $e) {
+            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+        }
+    }
+
+    public function showSubAdmins()
+    {
+        try {
+            $subAdmins = User::where('role', 'subAdmin')->where('status', 0)->get();
+
+            return $this->successResponse(Status::OK, 'subAdmins retrieved successfully', compact('subAdmins'));
         } catch (\Exception $e) {
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
         }
@@ -270,7 +281,7 @@ class UserController extends Controller
 
             $user->restore();
 
-            $user->status = 1;
+            $user->status = 0;
             $user->save();
 
             return $this->successResponse(Status::OK, 'User restored and activated successfully');
@@ -365,6 +376,82 @@ class UserController extends Controller
             $item->save();
 
             return $this->successResponse(Status::OK, 'Item has been ' . $request->is_Approved, compact('item'));
+        } catch (\Exception $e) {
+            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+        }
+    }
+
+    public function deleteSubAdmin($id)
+    {
+        try {
+            $subAdmin = User::find($id);
+
+            if (!$subAdmin) {
+                return $this->errorResponse(Status::NOT_FOUND, 'SubAdmin not found');
+            }
+
+            $subAdmin->status = 1;
+            $subAdmin->save();
+
+            $subAdmin->delete();
+
+            return $this->successResponse(Status::OK, 'SubAdmin status updated to inactive');
+        } catch (\Exception $e) {
+            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+        }
+    }
+
+    public function inactiveSubAdmins()
+    {
+        try {
+            $trashedSubAdmins = User::onlyTrashed()->get();
+
+            if ($trashedSubAdmins->isEmpty()) {
+                return $this->errorResponse(Status::NOT_FOUND, 'No SubAdmin found');
+            }
+
+            return $this->successResponse(Status::OK, 'Inactive SubAdmins retrieved successfully', compact('trashedSubAdmins'));
+        } catch (\Exception $e) {
+            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+        }
+    }
+
+    public function restoreSubAdmin($id)
+    {
+        try {
+            $subAdmin = User::withTrashed()->find($id);
+
+            if (!$subAdmin) {
+                return $this->errorResponse(Status::NOT_FOUND, 'SubAdmin not found');
+            }
+
+            $subAdmin->restore();
+
+            $subAdmin->status = 0;
+            $subAdmin->save();
+
+            return $this->successResponse(Status::OK, 'SubAdmin restored and activated successfully');
+        } catch (\Exception $e) {
+            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+        }
+    }
+
+    public function permanentDeleteSubAdmin($id)
+    {
+        try {
+            $subAdmin = User::withTrashed()->find($id);
+
+            if (!$subAdmin) {
+                return $this->errorResponse(Status::NOT_FOUND, 'SubAdmin not found');
+            }
+
+            if ($subAdmin->profile_picture && File::exists(public_path($subAdmin->profile_picture))) {
+                File::delete(public_path($subAdmin->profile_picture));
+            }
+
+            $subAdmin->forceDelete();
+
+            return $this->successResponse(Status::OK, 'SubAdmin permanently deleted');
         } catch (\Exception $e) {
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
         }

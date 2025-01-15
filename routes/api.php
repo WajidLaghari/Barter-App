@@ -29,43 +29,48 @@ Route::controller(UserController::class)->prefix('auth')->group(function () {
 });
 
 Route::controller(UserController::class)->group(function () {
-
     Route::middleware(['auth:sanctum', 'admin'])->group(function () {
-        #User Auth Routes
-        Route::post('/create/subAdmin', 'createSubAdmin');
-        Route::get('/show-users', 'index');
-        Route::get('/specified-user/{id}', 'show');
-        Route::delete('/delete/{id}', 'delete');
-        Route::get('/inactive-users', 'inactiveUsers');
-        Route::put('/restore-user/{id}', 'restoreUser');
-        Route::delete('/permenant-delete-user/{id}', 'permanentDeleteUser');
+        // Admin-only routes
+        Route::post('/create/subAdmin', [UserController::class, 'createSubAdmin']);
+        Route::get('/show-subAdmins', [UserController::class, 'showSubAdmins']);
+        Route::delete('/delete-subAdmin/{id}', [UserController::class, 'deleteSubAdmin']);
+        Route::get('/inactive-subAdmin', [UserController::class, 'inactiveSubAdmins']);
+        Route::put('/restore-subAdmin/{id}', [UserController::class, 'restoreSubAdmin']);
+        Route::delete('/permenant-delete-subAdmin/{id}', [UserController::class, 'permanentDeleteSubAdmin']);
+    });
 
-        #ItemApprovedOReject
+    Route::middleware(['auth:sanctum', 'adminOrSubAdmin'])->group(function () {
+        // Shared routes for admin and sub-admin
+        Route::get('/show-users', [UserController::class, 'showUsers']);
+        Route::get('/specified-user/{id}', [UserController::class, 'show']);
+        Route::delete('/delete/{id}', [UserController::class, 'delete']);
+        Route::get('/inactive-users', [UserController::class, 'inactiveUsers']);
+        Route::put('/restore-user/{id}', [UserController::class, 'restoreUser']);
+        Route::delete('/permenant-delete-user/{id}', [UserController::class, 'permanentDeleteUser']);
+
+        // Item approval or rejection
         Route::put('/item/approveORreject/{id}', [UserController::class, 'isApproved']);
 
-        #AllItems
+        // All items for a user
         Route::get('/User/items', [UserController::class, 'showItems']);
 
-        #Offer Routes
+        // Offer Routes
         Route::get('/offers', [OfferController::class, 'index']);
 
-        #Category Route
+        // Category Route
         Route::apiResource('categories', CategoryController::class);
 
-        #UserVerificationRoute
+        // User Verification Route
         Route::post('/handle-verification/{id}', [UserVerificationController::class, 'handleVerification']);
     });
-});
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::controller(UserController::class)->group(function () {
+    Route::middleware('auth:sanctum')->group(function () {
         Route::get('/logout', 'logout');
         Route::put('/update/{id}', 'update');
         Route::put('/update-password/{id}', 'updatePassword');
+
+        Route::apiResource('items', ItemController::class);
+        Route::apiResource('offers', OfferController::class);
+        Route::post('/verify-profile', [UserVerificationController::class, 'verifyProfile']);
     });
 });
-
-Route::apiResource('items', ItemController::class)->middleware(['auth:sanctum']);
-Route::apiResource('offers', OfferController::class)->middleware(['auth:sanctum']);
-Route::post('/verify-profile',[UserVerificationController::class, 'verifyProfile'])->middleware(['auth:sanctum']);
-

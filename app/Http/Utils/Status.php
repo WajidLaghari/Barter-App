@@ -14,4 +14,5 @@ enum Status: int
     case INVALID_REQUEST = 422;
     case INTERNAL_SERVER_ERROR = 500;
     case CONFLICT  = 409;
+    // case  DATABASE_ERROR = 500;
 }
