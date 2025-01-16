@@ -33,4 +33,9 @@ class Offer extends Model
     {
         return $this->belongsTo(User::class, 'offered_by');
     }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
 }

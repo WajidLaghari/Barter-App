@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Transaction extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'offer_id',
         'initiator_id',
@@ -17,4 +18,19 @@ class Transaction extends Model
         'cancelled_at',
         'disputed_at'
     ];
+
+    public function offer()
+    {
+        return $this->belongsTo(Offer::class);
+    }
+
+    public function initiator()
+    {
+        return $this->belongsTo(User::class, 'initiator_id');
+    }
+
+    public function recipient()
+    {
+        return $this->belongsTo(User::class, 'recipient_id');
+    }
 }

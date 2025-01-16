@@ -57,5 +57,14 @@ class User extends Authenticatable
         return $this->hasMany(Offer::class, 'offered_by');
     }
 
+    public function initiatedTransactions()
+    {
+        return $this->hasMany(Transaction::class, 'initiator_id');
+    }
+
+    public function receivedTransactions()
+    {
+        return $this->hasMany(Transaction::class, 'recipient_id');
+    }
 
 }

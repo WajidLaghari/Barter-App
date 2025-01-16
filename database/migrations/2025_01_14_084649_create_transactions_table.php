@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('offer_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('initiator_id')->constrained('users')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('recipient_id')->constrained('users')->onUpdate('cascade')->onDelete('cascade');
+            $table->enum('status',['pending','completed','cancelled','disputed'])->default('pending');
             $table->timestamp('completed_at')->nullable();
             $table->timestamp('cancelled_at')->nullable();
             $table->timestamp('disputed_at')->nullable();

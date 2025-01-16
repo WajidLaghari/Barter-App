@@ -4,6 +4,7 @@ use App\Http\Controllers\API\ItemController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\OfferController;
+use App\Http\Controllers\API\TransactionController;
 use App\Http\Controllers\API\UserVerificationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -69,8 +70,14 @@ Route::controller(UserController::class)->group(function () {
         Route::put('/update/{id}', 'update');
         Route::put('/update-password/{id}', 'updatePassword');
 
-        Route::apiResource('items', ItemController::class);
-        Route::apiResource('offers', OfferController::class);
+        Route::apiResource('/items', ItemController::class);
+        Route::apiResource('/offers', OfferController::class);
         Route::post('/verify-profile', [UserVerificationController::class, 'verifyProfile']);
+
+        Route::post('/create-transaction',[TransactionController::class,'createTransaction']);
+        Route::put('/update-status/{id}',[TransactionController::class,'updateStatus']);
+        Route::get('/show-transactions',[TransactionController::class,'showTransaction']);
+        Route::get('/show-specified-transaction/{id}',[TransactionController::class,'showSpecifiedTransaction']);
+        Route::delete('/delete-transaction/{id}',[TransactionController::class,'deleteTransaction']);
     });
 });
