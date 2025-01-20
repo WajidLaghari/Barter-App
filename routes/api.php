@@ -3,6 +3,7 @@
 use App\Http\Controllers\API\ItemController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\CategoryController;
+use App\Http\Controllers\API\ConversationController;
 use App\Http\Controllers\API\OfferController;
 use App\Http\Controllers\API\TransactionController;
 use App\Http\Controllers\API\UserVerificationController;
@@ -72,12 +73,14 @@ Route::controller(UserController::class)->group(function () {
 
         Route::apiResource('/items', ItemController::class);
         Route::apiResource('/offers', OfferController::class);
+        Route::apiResource('/conversations', ConversationController::class);
         Route::post('/verify-profile', [UserVerificationController::class, 'verifyProfile']);
 
-        Route::post('/create-transaction',[TransactionController::class,'createTransaction']);
-        Route::put('/update-status/{id}',[TransactionController::class,'updateStatus']);
-        Route::get('/show-transactions',[TransactionController::class,'showTransaction']);
-        Route::get('/show-specified-transaction/{id}',[TransactionController::class,'showSpecifiedTransaction']);
-        Route::delete('/delete-transaction/{id}',[TransactionController::class,'deleteTransaction']);
+        Route::post('/create-transaction', [TransactionController::class, 'createTransaction']);
+        Route::put('/update-status/{id}', [TransactionController::class, 'updateStatus']);
+        Route::get('/show-transactions', [TransactionController::class, 'showTransaction']);
+        Route::get('/show-specified-transaction/{id}', [TransactionController::class, 'showSpecifiedTransaction']);
+        Route::delete('/delete-transaction/{id}', [TransactionController::class, 'deleteTransaction']);
     });
+
 });

@@ -56,10 +56,10 @@ class CategoryController extends Controller
                 'description' => $request->description,
             ]);
 
-        return $this->successResponse(Status::OK, 'Category was added successfully', compact('category'));
-    } catch (\Exception $e) {
-        return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
-    }
+            return $this->successResponse(Status::OK, 'Category was added successfully', compact('category'));
+        } catch (\Exception $e) {
+            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+        }
     }
 
     /**
