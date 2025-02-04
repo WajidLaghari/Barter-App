@@ -30,3 +30,23 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 //     forceTLS: (import.meta.env.VITE_PUSHER_SCHEME ?? 'https') === 'https',
 //     enabledTransports: ['ws', 'wss'],
 // });
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
+
+// Set up Pusher
+window.Pusher = Pusher;
+
+window.Echo = new Echo({
+    broadcaster: 'pusher',
+    key: import.meta.env.VITE_PUSHER_APP_KEY, // Ensure these are defined in your .env
+    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+    forceTLS: true,
+});
+
+
+
+window.Echo.private(`chat.${conversationId}`)
+    .listen('MessageSent', (e) => {
+        console.log('New message received:', e.message);
+        // Update UI with the new message
+    });

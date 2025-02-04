@@ -4,6 +4,7 @@ use App\Http\Controllers\API\ItemController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\ConversationController;
+use App\Http\Controllers\API\MessageController;
 use App\Http\Controllers\API\OfferController;
 use App\Http\Controllers\API\TransactionController;
 use App\Http\Controllers\API\UserVerificationController;
@@ -81,6 +82,8 @@ Route::controller(UserController::class)->group(function () {
         Route::get('/show-transactions', [TransactionController::class, 'showTransaction']);
         Route::get('/show-specified-transaction/{id}', [TransactionController::class, 'showSpecifiedTransaction']);
         Route::delete('/delete-transaction/{id}', [TransactionController::class, 'deleteTransaction']);
-    });
 
+        Route::post('/send-message', [MessageController::class, 'send']);
+        Route::put('/message/{messageId}/read', [MessageController::class, 'markAsRead']);
+    });
 });
