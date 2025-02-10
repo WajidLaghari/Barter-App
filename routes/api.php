@@ -40,6 +40,9 @@ Route::controller(UserController::class)->group(function () {
         Route::get('/inactive-subAdmin', [UserController::class, 'inactiveSubAdmins']);
         Route::put('/restore-subAdmin/{id}', [UserController::class, 'restoreSubAdmin']);
         Route::delete('/permenant-delete-subAdmin/{id}', [UserController::class, 'permanentDeleteSubAdmin']);
+
+        // Category Route
+        Route::apiResource('categories', CategoryController::class);
     });
 
     Route::middleware(['auth:sanctum', 'adminOrSubAdmin'])->group(function () {
@@ -59,9 +62,6 @@ Route::controller(UserController::class)->group(function () {
 
         // Offer Routes
         Route::get('/offers', [OfferController::class, 'index']);
-
-        // Category Route
-        Route::apiResource('categories', CategoryController::class);
 
         // User Verification Route
         Route::post('/handle-verification/{id}', [UserVerificationController::class, 'handleVerification']);
