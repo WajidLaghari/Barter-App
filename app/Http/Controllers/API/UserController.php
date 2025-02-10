@@ -241,6 +241,21 @@ class UserController extends Controller
         }
     }
 
+    public function myProfile()
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return $this->errorResponse(Status::UNAUTHORIZED, 'User not authenticated');
+            }
+
+            return $this->successResponse(Status::OK, 'User profile retrieved successfully', compact('user'));
+        } catch (\Exception $e) {
+            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+        }
+    }
+
     public function delete($id)
     {
         try {

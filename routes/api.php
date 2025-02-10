@@ -33,7 +33,7 @@ Route::controller(UserController::class)->prefix('auth')->group(function () {
 
 Route::controller(UserController::class)->group(function () {
     Route::middleware(['auth:sanctum', 'admin'])->group(function () {
-        // Admin-only routes
+        #Admin-only routes
         Route::post('/create/subAdmin', [UserController::class, 'createSubAdmin']);
         Route::get('/show-subAdmins', [UserController::class, 'showSubAdmins']);
         Route::delete('/delete-subAdmin/{id}', [UserController::class, 'deleteSubAdmin']);
@@ -44,25 +44,26 @@ Route::controller(UserController::class)->group(function () {
     });
 
     Route::middleware(['auth:sanctum', 'adminOrSubAdmin'])->group(function () {
-        // Shared routes for admin and sub-admin
+        #Shared routes for admin and sub-admin
         Route::get('/show-users', [UserController::class, 'showUsers']);
         Route::get('/specified-user/{id}', [UserController::class, 'show']);
         Route::delete('/delete/{id}', [UserController::class, 'delete']);
         Route::get('/inactive-users', [UserController::class, 'inactiveUsers']);
         Route::put('/restore-user/{id}', [UserController::class, 'restoreUser']);
         Route::delete('/permenant-delete-user/{id}', [UserController::class, 'permanentDeleteUser']);
+
         Route::apiResource('/categories', CategoryController::class)->except(['index', 'show']);
 
-        // Item approval or rejection
+        #Item approval or rejection
         Route::put('/item/approveORreject/{id}', [UserController::class, 'isApproved']);
 
-        // All items for a user
+        #All items for a user
         Route::get('/User/items', [UserController::class, 'showItems']);
 
-        // Offer Routes
+        #Offer Routes
         Route::get('/offers', [OfferController::class, 'index']);
 
-        // User Verification Route
+        #User Verification Route
         Route::post('/handle-verification/{id}', [UserVerificationController::class, 'handleVerification']);
     });
 
@@ -88,5 +89,8 @@ Route::controller(UserController::class)->group(function () {
         #Users Can only view categories
         Route::get('/categories', [CategoryController::class, 'index']);
         Route::get('/categories/{id}', [CategoryController::class, 'show']);
+
+        Route::get('/my-profile', [UserController::class, 'myProfile']);
+
     });
 });
