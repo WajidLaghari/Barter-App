@@ -151,9 +151,8 @@ class ItemController extends Controller
 
                 /*Upload new images*/
                 foreach ($files as $image) {
-                    $imagePath = 'uploads/' . $image->hashName();
-                    $image->move(public_path('uploads'), $image->hashName());
-                    $uploadedImages[] = $imagePath;
+                    $imagePath = $image->store('uploads', 'public');
+                    $uploadedImages[] = asset('storage/' . $imagePath);
                 }
             } else {
                 /*Retain old images if no new images are uploaded*/

@@ -41,8 +41,6 @@ Route::controller(UserController::class)->group(function () {
         Route::put('/restore-subAdmin/{id}', [UserController::class, 'restoreSubAdmin']);
         Route::delete('/permenant-delete-subAdmin/{id}', [UserController::class, 'permanentDeleteSubAdmin']);
 
-        // Category Route
-        Route::apiResource('categories', CategoryController::class);
     });
 
     Route::middleware(['auth:sanctum', 'adminOrSubAdmin'])->group(function () {
@@ -53,6 +51,7 @@ Route::controller(UserController::class)->group(function () {
         Route::get('/inactive-users', [UserController::class, 'inactiveUsers']);
         Route::put('/restore-user/{id}', [UserController::class, 'restoreUser']);
         Route::delete('/permenant-delete-user/{id}', [UserController::class, 'permanentDeleteUser']);
+        Route::apiResource('/categories', CategoryController::class)->except(['index', 'show']);
 
         // Item approval or rejection
         Route::put('/item/approveORreject/{id}', [UserController::class, 'isApproved']);
@@ -85,5 +84,9 @@ Route::controller(UserController::class)->group(function () {
 
         Route::post('/send-message', [MessageController::class, 'send']);
         Route::put('/message/{messageId}/read', [MessageController::class, 'markAsRead']);
+
+        #Users Can only view categories
+        Route::get('/categories', [CategoryController::class, 'index']);
+        Route::get('/categories/{id}', [CategoryController::class, 'show']);
     });
 });
