@@ -106,7 +106,6 @@ class UserController extends Controller
             // $profilePicturePath = 'uploads/' . basename($profilePicture->move(public_path('uploads'), $profilePicture->hashName()));
             $profilePicturePath = $request->file('profile_picture') ? $request->file('profile_picture')->store('uploads', 'public') : null;
 
-
             $user = User::create([
                 'username' => $request->username,
                 'email' => $request->email,
@@ -193,26 +192,30 @@ class UserController extends Controller
                 'email' => 'sometimes|required|string|email|unique:users,email,' . $id,
                 'first_name' => 'sometimes|required|string',
                 'last_name' => 'sometimes|required|string',
-                'profile_picture' => 'sometimes|required|image|mimes:jpeg,png,jpg|max:2048',
+                'profile_picture' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
             ]);
 
             if ($validation->fails()) {
                 return $this->errorResponse(Status::INVALID_REQUEST, Message::VALIDATION_FAILURE, $validation->errors()->toArray());
             }
 
+
             if ($request->hasFile('profile_picture')) {
-                if ($user->profile_picture) {
-                    $oldImagePath = public_path($user->profile_picture);
-                    if (File::exists($oldImagePath)) {
-                        File::delete($oldImagePath);
-                    }
+                // Delete the old image if it exists
+                if ($user->profile_picture && file_exists(public_path($user->profile_picture))) {
+                    unlink(public_path($user->profile_picture));
                 }
 
+                // Upload new image
                 $profilePicture = $request->file('profile_picture');
-                $profilePicturePath = 'uploads/' . basename($profilePicture->move(public_path('uploads'), $profilePicture->hashName()));
-                $user->profile_picture = $profilePicturePath;
+                $profilePictureName = time() . '_' . $profilePicture->getClientOriginalName();
+                $profilePicturePath = $profilePicture->storeAs('uploads', $profilePictureName, 'public');
+
+                // Save new image path in database using asset()
+                $user->profile_picture = $profilePicturePath ? asset('storage/' . $profilePicturePath) : null;
             }
 
+            // Update user details except password
             $user->update($request->except(['password', 'profile_picture']));
 
             return $this->successResponse(Status::OK, 'User updated successfully', compact('user'));
@@ -222,6 +225,7 @@ class UserController extends Controller
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
         }
     }
+
 
     public function show($id)
     {
