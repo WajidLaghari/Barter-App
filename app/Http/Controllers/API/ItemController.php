@@ -65,9 +65,8 @@ class ItemController extends Controller
 
             $uploadedImages = [];
             foreach ($files as $image) {
-                $imagePath = 'uploads/' . $image->hashName();
-                $image->move(public_path('uploads'), $image->hashName());
-                $uploadedImages[] = $imagePath;
+                $imagePath = $image->store('uploads', 'public');
+                $uploadedImages[] = asset('storage/' . $imagePath);
             }
 
             $item = Item::create([
