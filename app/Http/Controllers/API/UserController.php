@@ -103,9 +103,16 @@ class UserController extends Controller
                 return $this->errorResponse(Status::INVALID_REQUEST, Message::VALIDATION_FAILURE, $validation->errors()->toArray());
             }
 
-            $profilePicture = $request->file('profile_picture');
-            // $profilePicturePath = 'uploads/' . basename($profilePicture->move(public_path('uploads'), $profilePicture->hashName()));
-            $profilePicturePath = $request->file('profile_picture') ? $request->file('profile_picture')->store('uploads', 'public') : null;
+            // $profilePicture = $request->file('profile_picture');
+            // // $profilePicturePath = 'uploads/' . basename($profilePicture->move(public_path('uploads'), $profilePicture->hashName()));
+            // $profilePicturePath = $request->file('profile_picture') ? $request->file('profile_picture')->store('uploads', 'public') : null;
+
+            $profilePicturePath = null;
+            if ($request->hasFile('profile_picture')) {
+                $profilePicture = $request->file('profile_picture');
+                $uniqueFileName = time() . '_' . uniqid() . '.' . $profilePicture->getClientOriginalExtension();
+                $profilePicturePath = $profilePicture->storeAs('uploads', $uniqueFileName, 'public');
+            }
 
             $user = User::create([
                 'username' => $request->username,
