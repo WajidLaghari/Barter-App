@@ -29,7 +29,8 @@ class User extends Authenticatable
         'profile_picture',
         'status',
         'role',
-        'is_verified'
+        'is_verified',
+        'fcm_token'
     ];
 
     /**
@@ -65,6 +66,11 @@ class User extends Authenticatable
     public function receivedTransactions()
     {
         return $this->hasMany(Transaction::class, 'recipient_id');
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
     }
 
 }

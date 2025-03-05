@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\File;
 use App\Http\Utils\ApiResponse;
 use App\Models\Item;
 use App\Models\User;
+use Str;
 
 class UserController extends Controller
 {
@@ -125,19 +126,60 @@ class UserController extends Controller
         }
     }
 
+    // public function login(Request $request)
+    // {
+    //     try {
+    //         $validation = Validator::make($request->all(), [
+    //             'login' => 'required|string',
+    //             'password' => 'required|string',
+    //         ]);
+
+    //         if ($validation->fails()) {
+    //             return $this->errorResponse(Status::INVALID_REQUEST, Message::VALIDATION_FAILURE, $validation->errors()->toArray());
+    //         }
+
+    //         $user = User::where(function ($query) use ($request) {
+    //             if (filter_var($request->login, FILTER_VALIDATE_EMAIL)) {
+    //                 $query->where('email', $request->login);
+    //             } else {
+    //                 $query->where('username', $request->login);
+    //             }
+    //         })->first();
+
+    //         if (!$user || !Hash::check($request->password, $user->password)) {
+    //             return $this->errorResponse(Status::UNAUTHORIZED, 'Invalid credentials');
+    //         }
+
+    //         if ($user->status !== 0) {
+    //             return $this->errorResponse(Status::FORBIDDEN, 'Account does not exist. Please contact support.');
+    //         }
+
+    //         $token = $user->createToken('auth_token')->plainTextToken;
+
+    //         return $this->successResponse(Status::OK, 'User logged in successfully', [
+    //             'user' => $user,
+    //             'access_token' => $token,
+    //             'token_type' => 'Bearer',
+    //         ]);
+    //     } catch (\Illuminate\Database\QueryException $e) {
+    //         return $this->errorResponse(Status::INVALID_REQUEST, 'Invalid request');
+    //     } catch (\Exception $e) {
+    //         return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+    //     }
+    // }
     public function login(Request $request)
     {
         try {
             $validation = Validator::make($request->all(), [
                 'login' => 'required|string',
-                'password' => 'required|string',
+                'password' => 'required|string'
             ]);
 
             if ($validation->fails()) {
                 return $this->errorResponse(Status::INVALID_REQUEST, Message::VALIDATION_FAILURE, $validation->errors()->toArray());
             }
 
-            $user = User::where(function ($query) use ($request) {
+            $user = User::where(function ($query) use ($request){
                 if (filter_var($request->login, FILTER_VALIDATE_EMAIL)) {
                     $query->where('email', $request->login);
                 } else {
@@ -153,10 +195,16 @@ class UserController extends Controller
                 return $this->errorResponse(Status::FORBIDDEN, 'Account does not exist. Please contact support.');
             }
 
+            // Generate New FCM Token
+            $newFcmToken = Str::random(32);
+            $user->fcm_token = $newFcmToken;
+            $user->save();
+
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return $this->successResponse(Status::OK, 'User logged in successfully', [
                 'user' => $user,
+                'fcm_token' => $newFcmToken,
                 'access_token' => $token,
                 'token_type' => 'Bearer',
             ]);

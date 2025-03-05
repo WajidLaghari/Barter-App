@@ -43,4 +43,7 @@ return [
         'redirect' => env('FACEBOOK_REDIRECT_URI'),
     ],
 
+   'fcm' => [
+    'credentials' => base_path(env('FCM_CREDENTIALS_FILE')),
+    ],
 ];

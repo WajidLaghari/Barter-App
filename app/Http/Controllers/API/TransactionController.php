@@ -119,5 +119,4 @@ class TransactionController extends Controller
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
         }
     }
-
 }
