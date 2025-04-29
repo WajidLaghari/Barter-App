@@ -59,18 +59,44 @@ return [
         //         'scheme' => 'http',
         //     ],
         // ],
-        'pusher' => [
-            'driver' => 'pusher',
-            'key' => env('PUSHER_APP_KEY'),
-            'secret' => env('PUSHER_APP_SECRET'),
-            'app_id' => env('PUSHER_APP_ID'),
-            'options' => [
-                'cluster' => env('PUSHER_APP_CLUSTER'),
-                'useTLS' => true,
-            ],
+        // 'pusher' => [
+        //     'driver' => 'pusher',
+        //     'key' => env('PUSHER_APP_KEY'),
+        //     'secret' => env('PUSHER_APP_SECRET'),
+        //     'app_id' => env('PUSHER_APP_ID'),
+        //     'options' => [
+        //         'cluster' => env('PUSHER_APP_CLUSTER'),
+        //         'useTLS' => true,
+        //     ],
 
 
-        ],
+        // ],
+
+//        'pusher' => [
+//     'driver' => 'pusher',
+//     'key' => env('8eaef40db82020d3468d'),
+//     'secret' => env('a912129b3508e09b6c35'),
+//     'app_id' => env('1979124'),
+//     'options' => [
+//         'cluster' => env('mt1'),
+//         'useTLS' => true,
+//         'host' => '127.0.0.1',
+//         'port' => 6001,
+//         'scheme' => 'http',
+//     ],
+// ],
+'pusher' => [
+    'driver' => 'pusher',
+    'key' => env('PUSHER_APP_KEY'),
+    'secret' => env('PUSHER_APP_SECRET'),
+    'app_id' => env('PUSHER_APP_ID'),
+    'options' => [
+        'cluster' => env('PUSHER_APP_CLUSTER'),
+        'useTLS' => true,
+    ],
+],
+
+
 
         'ably' => [
             'driver' => 'ably',

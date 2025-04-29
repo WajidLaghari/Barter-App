@@ -22,17 +22,17 @@ return [
      * messages to each other via the webSockets.
      */
     'apps' => [
-        [
-            'id' => env('1935759'),
-            'name' => env('APP_NAME'),
-            'key' => env('f40285425e8036ff9290'),
-            'secret' => env('af21f7d721c395351034'),
-            'path' => env('PUSHER_APP_PATH'),
-            'capacity' => null,
-            'enable_client_messages' => false,
-            'enable_statistics' => true,
-        ],
+    [
+        'id' => env('PUSHER_APP_ID', 'local'),
+        'name' => 'BarterApp',
+        'key' => env('PUSHER_APP_KEY', 'local'),
+        'secret' => env('PUSHER_APP_SECRET', 'local'),
+        'path' => '/',
+        'capacity' => null,
+        'enable_client_messages' => true,
+        'enable_statistics' => true,
     ],
+],
 
     /*
      * This class is responsible for finding the apps. The default provider

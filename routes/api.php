@@ -9,6 +9,7 @@ use App\Http\Controllers\API\OfferController;
 use App\Http\Controllers\API\TransactionController;
 use App\Http\Controllers\API\UserVerificationController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ReviewController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -91,8 +92,19 @@ Route::controller(UserController::class)->group(function () {
 
         Route::get('/my-profile', [UserController::class, 'myProfile']);
 
-        #Notification Routes
         Route::post('send-notification', [NotificationController::class, 'sendUserNotification']);
         Route::get('get-notification', [NotificationController::class, 'getUserNotifications']);
+
+        // Route::resource('/reviews', ReviewController::class);
+        Route::post('/store/reviews', [ReviewController::class, 'store']);
+
+        Route::get('show/all/items/for/user',[ItemController::class,'showAllForUser']);
+
+        Route::get('/items-with-offers', [ItemController::class, 'itemsWithOffers']);
+
+        Route::get('/item-with-offers', [ItemController::class, 'itemWithOffersDetails']);
+
+        Route::get('/offers/{id}', [OfferController::class, 'viewOfferDetail']);
+
     });
 });

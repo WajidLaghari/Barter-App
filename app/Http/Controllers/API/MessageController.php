@@ -24,15 +24,17 @@ class MessageController extends Controller
         // Create the message
         $message = Message::create([
             'conversation_id' => $request->conversation_id,
-            'sender_id' => $sender_id,
+            // 'sender_id' => $sender_id,
+            'sender_id' => auth()->id(),
             'content' => $request->content,
         ]);
 
-        // Broadcast the message to the appropriate channel
-        broadcast(new MessageSent($message));
+        // Load sender info for broadcasting (if needed)
+    $message->load('sender');
 
-        // Return response
-        return response()->json($message, 201);
+    broadcast(new MessageSent($message))->toOthers();
+
+    return response()->json(['message' => $message]);
     }
 
     // Mark message as read

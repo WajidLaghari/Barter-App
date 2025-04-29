@@ -17,7 +17,7 @@ class OfferController extends Controller
     {
         try {
 
-            $offers = Offer::with(['item', 'offeredItem', 'user'])->get();
+            $offers = Offer::with(['item', 'offeredItems', 'user'])->get();
 
             return $this->successResponse(Status::OK, 'Offers retrieved successfully', compact('offers'));
 
@@ -30,12 +30,39 @@ class OfferController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+    // public function store(Request $request)
+    // {
+    //     try{
+    //         $validation = Validator::make($request->all(),[
+    //             'item_id' => 'required|exists:items,id',
+    //             'offered_item_id' => 'required|exists:items,id|different:item_id',
+    //             'message_text' => 'nullable|string|max:1000',
+    //         ]);
+
+    //         if ($validation->fails()) {
+    //             return $this->errorResponse(Status::INVALID_REQUEST, Message::VALIDATION_FAILURE, $validation->errors()->toArray());
+    //         }
+
+    //         $offer = Offer::create([
+    //             'item_id' => $request->item_id,
+    //             'offered_item_id' => $request->offered_item_id,
+    //             'offered_by' => auth()->id(),
+    //             'message_text' => $request->message_text,
+    //             'status' => 'pending',
+    //         ]);
+
+    //         return $this->successResponse(Status::OK, 'Offer was created successfully', compact('offer'));
+    //     }catch (\Exception $e) {
+    //         return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+    //     }
+    // }
     public function store(Request $request)
     {
-        try{
-            $validation = Validator::make($request->all(),[
+        try {
+            $validation = Validator::make($request->all(), [
                 'item_id' => 'required|exists:items,id',
-                'offered_item_id' => 'required|exists:items,id|different:item_id',
+                'offered_item_ids' => 'required|array|min:1',
+                'offered_item_ids.*' => 'exists:items,id|different:item_id',
                 'message_text' => 'nullable|string|max:1000',
             ]);
 
@@ -45,18 +72,18 @@ class OfferController extends Controller
 
             $offer = Offer::create([
                 'item_id' => $request->item_id,
-                'offered_item_id' => $request->offered_item_id,
                 'offered_by' => auth()->id(),
                 'message_text' => $request->message_text,
                 'status' => 'pending',
             ]);
 
+            $offer->offeredItems()->attach($request->offered_item_ids);
+
             return $this->successResponse(Status::OK, 'Offer was created successfully', compact('offer'));
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
         }
     }
-
 
     /**
     * Display the specified resource.
@@ -64,7 +91,7 @@ class OfferController extends Controller
     public function show(string $id)
     {
         try {
-            $offer = Offer::with(['item', 'offeredItem', 'user'])->find($id);
+            $offer = Offer::with(['item', 'offeredItems', 'user'])->find($id);
 
             if (!$offer) {
                 return $this->errorResponse(Status::NOT_FOUND, 'Offer not found.');
@@ -79,12 +106,48 @@ class OfferController extends Controller
     /**
      * Update the specified resource in storage.
      */
+    // public function update(Request $request, string $id)
+    // {
+    //     try {
+    //         $validation = Validator::make($request->all(), [
+    //             'item_id' => 'sometimes|required|exists:items,id',
+    //             'offered_item_id' => 'sometimes|required|exists:items,id|different:item_id',
+    //             'message_text' => 'nullable|string|max:1000',
+    //             'status' => 'nullable|in:pending,accepted,rejected',
+    //         ]);
+
+    //         if ($validation->fails()) {
+    //             return $this->errorResponse(Status::INVALID_REQUEST, Message::VALIDATION_FAILURE, $validation->errors()->toArray());
+    //         }
+
+    //         $offer = Offer::find($id);
+
+    //         if (!$offer) {
+    //             return $this->errorResponse(Status::NOT_FOUND, 'Offer not found.');
+    //         }
+
+    //         $offer->update([
+    //             'item_id' => $request->item_id,
+    //             'offered_item_id' => $request->offered_item_id,
+    //             'message_text' => $request->message_text,
+    //             'status' => $request->status,
+    //         ]);
+
+    //         return $this->successResponse(Status::OK, 'Offer updated successfully', compact('offer'));
+
+    //     } catch (\Exception $e) {
+    //         // Return error response if an exception occurs
+    //         return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+    //     }
+    // }
+
     public function update(Request $request, string $id)
     {
         try {
             $validation = Validator::make($request->all(), [
                 'item_id' => 'sometimes|required|exists:items,id',
-                'offered_item_id' => 'sometimes|required|exists:items,id|different:item_id',
+                'offered_item_ids' => 'sometimes|required|array|min:1',
+                'offered_item_ids.*' => 'exists:items,id|different:item_id',
                 'message_text' => 'nullable|string|max:1000',
                 'status' => 'nullable|in:pending,accepted,rejected',
             ]);
@@ -99,17 +162,25 @@ class OfferController extends Controller
                 return $this->errorResponse(Status::NOT_FOUND, 'Offer not found.');
             }
 
+            // Update the offer details
             $offer->update([
                 'item_id' => $request->item_id,
-                'offered_item_id' => $request->offered_item_id,
                 'message_text' => $request->message_text,
                 'status' => $request->status,
             ]);
 
+            // If offered_item_ids are passed, update the offered items
+            if ($request->has('offered_item_ids')) {
+                // Detach existing offered items
+                $offer->offeredItems()->detach();
+
+                // Attach the new offered items
+                $offer->offeredItems()->attach($request->offered_item_ids);
+            }
+
             return $this->successResponse(Status::OK, 'Offer updated successfully', compact('offer'));
 
         } catch (\Exception $e) {
-            // Return error response if an exception occurs
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
         }
     }
@@ -117,15 +188,35 @@ class OfferController extends Controller
     /**
     * Remove the specified resource from storage.
     */
+    // public function destroy(string $id)
+    // {
+    //     try {
+
+    //         $offer = Offer::find($id);
+
+    //         if (!$offer) {
+    //             return $this->errorResponse(Status::NOT_FOUND, 'Offer not found.');
+    //         }
+
+    //         $offer->delete();
+
+    //         return $this->successResponse(Status::OK, 'Offer deleted successfully.');
+    //     } catch (\Exception $e) {
+    //         return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+    //     }
+    // }
+
     public function destroy(string $id)
     {
         try {
-
             $offer = Offer::find($id);
 
             if (!$offer) {
                 return $this->errorResponse(Status::NOT_FOUND, 'Offer not found.');
             }
+
+            // Detach related offered items before deleting the offer
+            $offer->offeredItems()->detach();
 
             $offer->delete();
 
@@ -134,5 +225,4 @@ class OfferController extends Controller
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
         }
     }
-
 }

@@ -38,4 +38,9 @@ class Offer extends Model
     {
         return $this->hasMany(Transaction::class);
     }
+
+    public function offeredItems()
+    {
+        return $this->belongsToMany(Item::class, 'offer_item', 'offer_id', 'item_id');
+    }
 }

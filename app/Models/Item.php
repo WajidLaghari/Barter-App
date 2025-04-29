@@ -39,4 +39,14 @@ class Item extends Model
         return $this->hasMany(Offer::class, 'offered_item_id');
     }
 
+    public function offers()
+    {
+        return $this->belongsToMany(Offer::class, 'offer_item', 'item_id', 'offer_id');
+    }
+
+    public function itemsWithOffer()
+    {
+        return $this->hasMany(Offer::class);
+    }
+
 }

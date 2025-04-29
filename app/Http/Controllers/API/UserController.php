@@ -96,7 +96,7 @@ class UserController extends Controller
                 'confirm_password' => ['required', 'same:password'],
                 'first_name' => 'required|string',
                 'last_name' => 'required|string',
-                'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'profile_picture' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             ]);
 
             if ($validation->fails()) {
@@ -127,7 +127,7 @@ class UserController extends Controller
 
             return $this->successResponse(Status::OK, 'user registration was successfully', compact('user'));
         } catch (\Illuminate\Database\QueryException $e) {
-            return $this->errorResponse(Status::INVALID_REQUEST, 'Email already exists');
+            return $this->errorResponse(Status::INVALID_REQUEST, $e->getMessage());
         } catch (\Exception $e) {
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
         }
@@ -178,7 +178,7 @@ class UserController extends Controller
     {
         try {
             $validation = Validator::make($request->all(), [
-                'login' => 'required|string',
+                'username' => 'required|string',
                 'password' => 'required|string'
             ]);
 
@@ -187,10 +187,10 @@ class UserController extends Controller
             }
 
             $user = User::where(function ($query) use ($request){
-                if (filter_var($request->login, FILTER_VALIDATE_EMAIL)) {
-                    $query->where('email', $request->login);
+                if (filter_var($request->username, FILTER_VALIDATE_EMAIL)) {
+                    $query->where('email', $request->username);
                 } else {
-                    $query->where('username', $request->login);
+                    $query->where('username', $request->username);
                 }
             })->first();
 
@@ -253,7 +253,6 @@ class UserController extends Controller
             if ($validation->fails()) {
                 return $this->errorResponse(Status::INVALID_REQUEST, Message::VALIDATION_FAILURE, $validation->errors()->toArray());
             }
-
 
             if ($request->hasFile('profile_picture')) {
                 // Delete the old image if it exists
