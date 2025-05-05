@@ -12,7 +12,7 @@ class Item extends Model
 
     protected $fillable = [
         'user_id', 'category_id', 'title', 'description', 'location',
-        'price_estimate', 'images', 'status','is_Approved'
+        'price_estimate','status','is_Approved','images'
     ];
 
     protected $casts = [
@@ -31,7 +31,8 @@ class Item extends Model
 
     public function offersAsItem()
     {
-        return $this->hasMany(Offer::class, 'item_id');
+        // return $this->hasMany(Offer::class, 'item_id');
+        return $this->belongsToMany(Offer::class, 'offer_item', 'item_id', 'offer_id');
     }
 
     public function offersAsOfferedItem()

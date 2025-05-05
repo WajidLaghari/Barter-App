@@ -106,5 +106,8 @@ Route::controller(UserController::class)->group(function () {
 
         Route::get('/offers/{id}', [OfferController::class, 'viewOfferDetail']);
 
+        Route::get('/my-offered-items/{user_id}', [ItemController::class, 'myOfferedItems']);
+
+        Route::get('/items/user/offered/on',[ItemController::class,'itemsUserOfferedOn']);
     });
 });

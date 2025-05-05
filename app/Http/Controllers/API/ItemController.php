@@ -128,7 +128,7 @@ class ItemController extends Controller
                 'description' => $request->description,
                 'location' => $request->location,
                 'price_estimate' => $request->price_estimate,
-                'images' => $uploadedImages, // ✅ no json_encode
+                'images' => json_encode($uploadedImages), // ✅ correct
                 'status' => 'stock',
                 'is_Approved' => 'pending'
             ]);
@@ -251,54 +251,147 @@ class ItemController extends Controller
         }
     }
 
-    public function itemsWithOffers()
-    {
-        try {
-            $items = Item::where('user_id', auth()->id())
-                ->whereHas('itemsWithOffer')
-                ->withCount('itemsWithOffer')
-                ->get();
+    // public function itemsWithOffers()
+    // {
+    //     try {
+    //         $items = Item::where('user_id', auth()->id())
+    //             ->whereHas('itemsWithOffer')
+    //             ->withCount('itemsWithOffer')
+    //             ->get();
 
-            if ($items->isEmpty()) {
-                return $this->errorResponse(Status::NOT_FOUND, 'No items with offers found.');
-            }
+    //         if ($items->isEmpty()) {
+    //             return $this->errorResponse(Status::NOT_FOUND, 'No items with offers found.');
+    //         }
 
-            $itemsData = $items->map(function ($item) {
-                return [
-                    'item_id' => $item->id,
-                    'title' => $item->title,
-                    'offer_count' => $item->items_with_offer_count, // Offer count ka data
-                ];
-            });
+    //         $itemsData = $items->map(function ($item) {
+    //             return [
+    //                 'item_id' => $item->id,
+    //                 'title' => $item->title,
+    //                 'offer_count' => $item->items_with_offer_count, // Offer count ka data
+    //             ];
+    //         });
 
-            return $this->successResponse(Status::OK, 'Items with offers retrieved successfully.', [
-                'items' => $itemsData,
-            ]);
-        } catch (\Exception $e) {
-            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
-        }
-    }
+    //         return $this->successResponse(Status::OK, 'Items with offers retrieved successfully.', [
+    //             'items' => $itemsData,
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+    //     }
+    // }
+
+    // public function itemWithOffersDetails()
+    // {
+    //     try {
+    //         $items = Item::where('user_id', auth()->id()) // Jo user logged in hai, uske items
+    //             ->whereHas('offersAsItem') // Jisme offers hon
+    //             ->with(['user', 'category', 'offersAsItem.user']) // Offers ke saath user details bhi load ho
+    //             ->get();
+
+    //         if ($items->isEmpty()) {
+    //             return $this->errorResponse(Status::NOT_FOUND, 'No items with offers found.');
+    //         }
+
+    //         // Items aur unke offers ka data prepare kar rahe hain
+    //         $itemsData = $items->map(function ($item) {
+    //             $offers = $item->offersAsItem->map(function ($offer) {
+    //                 return [
+    //                     'user_id' => $offer->user->id,
+    //                     'name' => $offer->user->name,
+    //                     'email' => $offer->user->email,
+    //                     'profile_picture' => $offer->user->profile_picture,
+    //                 ];
+    //             });
+
+    //             return [
+    //                 'item_id' => $item->id,
+    //                 'title' => $item->title,
+    //                 'description' => $item->description,
+    //                 'image' => $item->image,
+    //                 'offers' => $offers,
+    //             ];
+    //         });
+
+    //         return $this->successResponse(Status::OK, 'Items with offers retrieved successfully.', [
+    //             'items' => $itemsData,
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+    //     }
+    // public function itemWithOffersDetails()
+    // {
+    //     try {
+    //         // Fetch items with offers
+    //         $items = Item::where('user_id', auth()->id()) // Get items for the logged-in user
+    //             ->whereHas('offersAsItem') // Items that have offers
+    //             ->with(['user', 'category', 'offersAsItem.user']) // Eager load related data
+    //             ->get();
+
+    //         if ($items->isEmpty()) {
+    //             return $this->errorResponse(Status::NOT_FOUND, 'No items with offers found.');
+    //         }
+
+    //         // Map the items and prepare data including the offer count
+    //         $itemsData = $items->map(function ($item) {
+
+    //             // Prepare offer data
+    //             $offers = $item->offersAsItem->map(function ($offer) {
+    //                 return [
+    //                     'user_id' => $offer->user->id,
+    //                     'username' => $offer->user ? $offer->user->username : null, // Change name to username
+    //                     'email' => $offer->user ? $offer->user->email : null,
+    //                     'profile_picture' => $offer->user ? $offer->user->profile_picture : null,
+    //                 ];
+    //             });
+
+    //             return [
+    //                 'item_id' => $item->id,
+    //                 'title' => $item->title,
+    //                 'description' => $item->description,
+    //                 'image' => $item->images[0] ?? null,  // Safe access to images
+    //                 'offer_count' => $item->offersAsItem->count(),
+    //                 'offers' => $offers,
+    //             ];
+    //         });
+
+    //         return $this->successResponse(Status::OK, 'Items with offers retrieved successfully.', [
+    //             'items' => $itemsData,
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+    //     }
+    // }
 
     public function itemWithOffersDetails()
     {
         try {
-            $items = Item::where('user_id', auth()->id()) // Jo user logged in hai, uske items
-                ->whereHas('offersAsItem') // Jisme offers hon
-                ->with(['user', 'category', 'offersAsItem.user']) // Offers ke saath user details bhi load ho
+            // Fetch items with offers
+            $items = Item::where('user_id', auth()->id()) // Get items for the logged-in user
+                ->whereHas('offersAsItem') // Items that have offers
+                ->with(['user', 'category', 'offersAsItem.user']) // Eager load related data
                 ->get();
 
             if ($items->isEmpty()) {
                 return $this->errorResponse(Status::NOT_FOUND, 'No items with offers found.');
             }
 
-            // Items aur unke offers ka data prepare kar rahe hain
+            // Map the items and prepare data including the offer count
             $itemsData = $items->map(function ($item) {
+                // Handle images safely whether stored as JSON or array
+                $images = is_array($item->images)
+                    ? $item->images
+                    : json_decode($item->images, true);
+
+                if (!is_array($images)) {
+                    $images = []; // fallback
+                }
+
+                // Prepare offer data
                 $offers = $item->offersAsItem->map(function ($offer) {
                     return [
                         'user_id' => $offer->user->id,
-                        'name' => $offer->user->name,
-                        'email' => $offer->user->email,
-                        'profile_picture' => $offer->user->profile_picture,
+                        'username' => $offer->user ? $offer->user->username : null,
+                        'email' => $offer->user ? $offer->user->email : null,
+                        'profile_picture' => $offer->user ? $offer->user->profile_picture : null,
                     ];
                 });
 
@@ -306,7 +399,8 @@ class ItemController extends Controller
                     'item_id' => $item->id,
                     'title' => $item->title,
                     'description' => $item->description,
-                    'image' => $item->image,
+                    'images' => $images,
+                    'offer_count' => $item->offersAsItem->count(),
                     'offers' => $offers,
                 ];
             });
@@ -318,6 +412,52 @@ class ItemController extends Controller
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
         }
     }
+
+    public function itemsUserOfferedOn()
+    {
+        try {
+            // Get offers made by the logged-in user (offered_by)
+            $offers = Offer::where('offered_by', auth()->id())
+                ->with(['item.user', 'item.category']) // Load related item, item owner, and category
+                ->get();
+
+            if ($offers->isEmpty()) {
+                return $this->errorResponse(Status::NOT_FOUND, 'You have not made any offers.');
+            }
+
+            // Prepare the response data
+            $offeredItems = $offers->map(function ($offer) {
+                $item = $offer->item;
+
+                // Decode images safely
+                $images = is_array($item->images)
+                    ? $item->images
+                    : json_decode($item->images, true);
+
+                if (!is_array($images)) {
+                    $images = [];
+                }
+
+                return [
+                    'item_id' => $item->id,
+                    'title' => $item->title,
+                    'description' => $item->description,
+                    'images' => $images,
+                    'owner_id' => $item->user->id ?? null,
+                    'owner_name' => $item->user->username ?? null,
+                    'category' => $item->category->name ?? null,
+                    'your_offer_id' => $offer->id,
+                ];
+            });
+
+            return $this->successResponse(Status::OK, 'Items you have offered on retrieved successfully.', [
+                'items' => $offeredItems,
+            ]);
+        } catch (\Exception $e) {
+            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+        }
+    }
+
 
     public function viewOfferDetail($id)
     {
