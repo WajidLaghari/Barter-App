@@ -109,5 +109,7 @@ Route::controller(UserController::class)->group(function () {
         Route::get('/my-offered-items/{user_id}', [ItemController::class, 'myOfferedItems']);
 
         Route::get('/items/user/offered/on',[ItemController::class,'itemsUserOfferedOn']);
+
+        Route::put('/offers/{id}/respond', [OfferController::class, 'respondToOffer'])->middleware('auth:sanctum');
     });
 });

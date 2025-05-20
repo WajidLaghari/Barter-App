@@ -15,6 +15,7 @@ use App\Http\Utils\ApiResponse;
 use App\Models\Item;
 use App\Models\Offer;
 
+
 class ItemController extends Controller
 {
     use ApiResponse;
@@ -35,60 +36,7 @@ class ItemController extends Controller
     /**
     * Store a newly created resource in storage.
     */
-    // public function store(Request $request)
-    // {
-    //     try {
-
-    //         $files = $request->file('images');
-    //         if ($files && !is_array($files)) {
-    //             $files = [$files];
-    //         }
-
-    //         $requestData = $request->all();
-    //         $requestData['images'] = $files;
-
-    //         $validation = Validator::make($requestData, [
-    //             'category_id' => 'required|exists:categories,id',
-    //             'title' => 'required|string|max:255',
-    //             'description' => 'nullable|string',
-    //             'location' => 'required|string|max:255',
-    //             'price_estimate' => 'required|numeric',
-    //             'images' => 'required|array',
-    //             'images.*' => 'file|image|mimes:jpeg,png,jpg|max:2048',
-    //         ]);
-
-    //         if ($validation->fails()) {
-    //             return $this->errorResponse(Status::INVALID_REQUEST, Message::VALIDATION_FAILURE, $validation->errors()->toArray());
-    //         }
-
-    //         $userId = auth()->id();
-
-    //         $uploadedImages = [];
-    //         foreach ($files as $image) {
-    //             $imagePath = $image->store('uploads', 'public');
-    //             $uploadedImages[] = asset('storage/' . $imagePath);
-    //         }
-
-    //         $item = Item::create([
-    //             'user_id' => $userId,
-    //             'category_id' => $request->category_id,
-    //             'title' => $request->title,
-    //             'description' => $request->description,
-    //             'location' => $request->location,
-    //             'price_estimate' => $request->price_estimate,
-    //             'images' => json_encode($uploadedImages),
-    //             'status' => 'stock',
-    //             'is_Approved' => 'pending'
-    //         ]);
-
-    //         return $this->successResponse(Status::OK, 'Item created successfully', compact('item'));
-    //     } catch (\Illuminate\Database\QueryException $e) {
-    //         return $this->errorResponse(Status::INVALID_REQUEST, 'Database error occurred: ' . $e->getMessage());
-    //     } catch (\Exception $e) {
-    //         return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
-    //     }
-    // }
-    public function store(Request $request)
+   public function store(Request $request)
     {
         try {
             $files = $request->file('images');
@@ -121,7 +69,7 @@ class ItemController extends Controller
                 $uploadedImages[] = asset('storage/' . $imagePath);
             }
 
-            $item = Item::create([
+           $item = Item::create([
                 'user_id' => $userId,
                 'category_id' => $request->category_id,
                 'title' => $request->title,
@@ -141,19 +89,17 @@ class ItemController extends Controller
         }
     }
 
+
     /**
     * Display the specified resource.
     */
     public function show(string $id)
     {
         try {
-            $userId = Auth::id(); // current logged-in user ka ID
-            $item = Item::with('user', 'category')
-                        ->where('user_id', $userId)
-                        ->find($id);
+            $item = Item::with('user', 'category')->find($id);
 
             if (!$item) {
-                return $this->errorResponse(Status::NOT_FOUND, 'Item not found or not authorized');
+                return $this->errorResponse(Status::NOT_FOUND, 'Item not found');
             }
 
             return $this->successResponse(Status::OK, 'Item retrieved successfully', compact('item'));
@@ -161,6 +107,7 @@ class ItemController extends Controller
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
         }
     }
+
 
     public function showAllForUser()
     {
@@ -179,7 +126,6 @@ class ItemController extends Controller
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
         }
     }
-
     /**
     * Update the specified resource in storage.
     */
@@ -251,7 +197,7 @@ class ItemController extends Controller
         }
     }
 
-    // public function itemsWithOffers()
+    //  public function itemsWithOffers()
     // {
     //     try {
     //         $items = Item::where('user_id', auth()->id())
@@ -317,6 +263,7 @@ class ItemController extends Controller
     //     } catch (\Exception $e) {
     //         return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
     //     }
+    // }
     // public function itemWithOffersDetails()
     // {
     //     try {
@@ -332,12 +279,20 @@ class ItemController extends Controller
 
     //         // Map the items and prepare data including the offer count
     //         $itemsData = $items->map(function ($item) {
+    //             // Handle images safely whether stored as JSON or array
+    //             $images = is_array($item->images)
+    //                 ? $item->images
+    //                 : json_decode($item->images, true);
+
+    //             if (!is_array($images)) {
+    //                 $images = []; // fallback
+    //             }
 
     //             // Prepare offer data
     //             $offers = $item->offersAsItem->map(function ($offer) {
     //                 return [
     //                     'user_id' => $offer->user->id,
-    //                     'username' => $offer->user ? $offer->user->username : null, // Change name to username
+    //                     'username' => $offer->user ? $offer->user->username : null,
     //                     'email' => $offer->user ? $offer->user->email : null,
     //                     'profile_picture' => $offer->user ? $offer->user->profile_picture : null,
     //                 ];
@@ -347,7 +302,7 @@ class ItemController extends Controller
     //                 'item_id' => $item->id,
     //                 'title' => $item->title,
     //                 'description' => $item->description,
-    //                 'image' => $item->images[0] ?? null,  // Safe access to images
+    //                 'images' => $images,
     //                 'offer_count' => $item->offersAsItem->count(),
     //                 'offers' => $offers,
     //             ];
@@ -361,102 +316,140 @@ class ItemController extends Controller
     //     }
     // }
 
-    public function itemWithOffersDetails()
-    {
-        try {
-            // Fetch items with offers
-            $items = Item::where('user_id', auth()->id()) // Get items for the logged-in user
-                ->whereHas('offersAsItem') // Items that have offers
-                ->with(['user', 'category', 'offersAsItem.user']) // Eager load related data
-                ->get();
+public function itemWithOffersDetails()
+{
+    try {
+        $amamaUserId = auth()->id(); // Current user ID
 
-            if ($items->isEmpty()) {
-                return $this->errorResponse(Status::NOT_FOUND, 'No items with offers found.');
-            }
+        // Fetch items owned by current user that have offers
+        $items = Item::where('user_id', $amamaUserId)
+            ->whereHas('offersAsItem') // Only items that have offers
+            ->with([
+                'user',
+                'category',
+                'offersAsItem.user',
+                'offersAsItem.offeredItems' // Load offered items from pivot
+            ])
+            ->get();
 
-            // Map the items and prepare data including the offer count
-            $itemsData = $items->map(function ($item) {
-                // Handle images safely whether stored as JSON or array
-                $images = is_array($item->images)
-                    ? $item->images
-                    : json_decode($item->images, true);
+        if ($items->isEmpty()) {
+            return $this->errorResponse(Status::NOT_FOUND, 'No items with offers found.');
+        }
 
-                if (!is_array($images)) {
-                    $images = []; // fallback
-                }
+        // Prepare response
+        $itemsData = $items->map(function ($item) {
+            $images = is_array($item->images)
+                ? $item->images
+                : json_decode($item->images, true);
+            $images = is_array($images) ? $images : [];
 
-                // Prepare offer data
-                $offers = $item->offersAsItem->map(function ($offer) {
+            // Offers on this item
+            $offers = $item->offersAsItem->map(function ($offer) {
+                 \Log::info("Offer ID: {$offer->id} - Offered Items: " . $offer->offeredItems->pluck('id')->join(', '));
+                // Items offered in exchange
+                $offeredItems = $offer->offeredItems->map(function ($offeredItem) {
+                    $offeredImages = is_array($offeredItem->images)
+                        ? $offeredItem->images
+                        : json_decode($offeredItem->images, true);
+                    $offeredImages = is_array($offeredImages) ? $offeredImages : [];
+
                     return [
-                        'user_id' => $offer->user->id,
-                        'username' => $offer->user ? $offer->user->username : null,
-                        'email' => $offer->user ? $offer->user->email : null,
-                        'profile_picture' => $offer->user ? $offer->user->profile_picture : null,
+                        'id' => $offeredItem->id,
+                        'title' => $offeredItem->title,
+                        'description' => $offeredItem->description,
+                        'images' => $offeredImages,
                     ];
                 });
 
                 return [
-                    'item_id' => $item->id,
-                    'title' => $item->title,
-                    'description' => $item->description,
-                    'images' => $images,
-                    'offer_count' => $item->offersAsItem->count(),
-                    'offers' => $offers,
+                    'offer_id' => $offer->id,
+                    'user_id' => $offer->user->id,
+                    'username' => $offer->user->username ?? null,
+                    'email' => $offer->user->email ?? null,
+                    'profile_picture' => $offer->user->profile_picture ?? null,
+                    'offered_items' => $offeredItems,
                 ];
             });
 
-            return $this->successResponse(Status::OK, 'Items with offers retrieved successfully.', [
-                'items' => $itemsData,
-            ]);
-        } catch (\Exception $e) {
-            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
-        }
+            return [
+                'item_id' => $item->id,
+                'title' => $item->title,
+                'description' => $item->description,
+                'images' => $images,
+                'offer_count' => $item->offersAsItem->count(),
+                'offers' => $offers,
+            ];
+        });
+
+        return $this->successResponse(Status::OK, 'Items with offers retrieved successfully.', [
+            'items' => $itemsData,
+        ]);
+    } catch (\Exception $e) {
+        return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
     }
+}
 
-    public function itemsUserOfferedOn()
-    {
-        try {
-            // Get offers made by the logged-in user (offered_by)
-            $offers = Offer::where('offered_by', auth()->id())
-                ->with(['item.user', 'item.category']) // Load related item, item owner, and category
-                ->get();
 
-            if ($offers->isEmpty()) {
-                return $this->errorResponse(Status::NOT_FOUND, 'You have not made any offers.');
-            }
+// public function itemWithOffersDetails()
+// {
+//     try {
+//         $authId = auth()->id();
 
-            // Prepare the response data
-            $offeredItems = $offers->map(function ($offer) {
-                $item = $offer->item;
+//         // Get items owned by the current user that have offers
+//         $items = Item::where('user_id', $authId)
+//             ->whereHas('offersAsItem')  // Ensure that the item has at least one offer
+//             ->with(['user', 'category', 'offersAsItem.user'])  // Load offers with user info
+//             ->get();
 
-                // Decode images safely
-                $images = is_array($item->images)
-                    ? $item->images
-                    : json_decode($item->images, true);
+//         if ($items->isEmpty()) {
+//             return $this->errorResponse(Status::NOT_FOUND, 'No items with offers found.');
+//         }
 
-                if (!is_array($images)) {
-                    $images = [];
-                }
+//         $itemsData = $items->map(function ($item) use ($authId) {
+//             $images = is_array($item->images)
+//                 ? $item->images
+//                 : json_decode($item->images, true);
 
-                return [
-                    'item_id' => $item->id,
-                    'title' => $item->title,
-                    'description' => $item->description,
-                    'images' => $images,
-                    'owner_id' => $item->user->id ?? null,
-                    'owner_name' => $item->user->username ?? null,
-                    'category' => $item->category->name ?? null,
-                    'your_offer_id' => $offer->id,
-                ];
-            });
+//             if (!is_array($images)) {
+//                 $images = [];
+//             }
 
-            return $this->successResponse(Status::OK, 'Items you have offered on retrieved successfully.', [
-                'items' => $offeredItems,
-            ]);
-        } catch (\Exception $e) {
-            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
-        }
-    }
+//             // Apply filter to exclude offers made by the item owner (using the item owner’s user_id)
+//             $filteredOffers = $item->offersAsItem
+//                 ->filter(function ($offer) use ($authId, $item) {
+//                     // Ensure the offer is not from the owner of the item
+//                     return $offer->user_id != $item->user_id;
+//                 })
+//                 ->unique('user_id') // Ensure a user can only have one offer per item
+//                 ->map(function ($offer) {
+//                     return [
+//                         'offer_id' => $offer->id,
+//                         'user_id' => $offer->user->id ?? null,
+//                         'username' => $offer->user->username ?? null,
+//                         'email' => $offer->user->email ?? null,
+//                         'profile_picture' => $offer->user->profile_picture ?? null,
+//                     ];
+//                 })
+//                 ->values(); // Reindex the filtered collection
+
+//             return [
+//                 'item_id' => $item->id,
+//                 'title' => $item->title,
+//                 'description' => $item->description,
+//                 'images' => $images,
+//                 'offer_count' => $filteredOffers->count(),
+//                 'offers' => $filteredOffers,
+//             ];
+//         });
+
+//         return $this->successResponse(Status::OK, 'Items with offers retrieved successfully.', [
+//             'items' => $itemsData,
+//         ]);
+//     } catch (\Exception $e) {
+//         return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+//     }
+// }
+
 
 
     public function viewOfferDetail($id)
@@ -502,6 +495,51 @@ class ItemController extends Controller
         }
     }
 
+
+    public function itemsUserOfferedOn()
+    {
+        try {
+            // Get offers made by the logged-in user (offered_by)
+            $offers = Offer::where('offered_by', auth()->id())
+                ->with(['item.user', 'item.category']) // Load related item, item owner, and category
+                ->get();
+
+            if ($offers->isEmpty()) {
+                return $this->errorResponse(Status::NOT_FOUND, 'You have not made any offers.');
+            }
+
+            // Prepare the response data
+            $offeredItems = $offers->map(function ($offer) {
+                $item = $offer->item;
+
+                // Decode images safely
+                $images = is_array($item->images)
+                    ? $item->images
+                    : json_decode($item->images, true);
+
+                if (!is_array($images)) {
+                    $images = [];
+                }
+
+                return [
+                    'item_id' => $item->id,
+                    'title' => $item->title,
+                    'description' => $item->description,
+                    'images' => $images,
+                    'owner_id' => $item->user->id ?? null,
+                    'owner_name' => $item->user->username ?? null,
+                    'category' => $item->category->name ?? null,
+                    'your_offer_id' => $offer->id,
+                ];
+            });
+
+            return $this->successResponse(Status::OK, 'Items you have offered on retrieved successfully.', [
+                'items' => $offeredItems,
+            ]);
+        } catch (\Exception $e) {
+            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+        }
+    }
     /**
     * Remove the specified resource from storage.
     */
@@ -523,5 +561,4 @@ class ItemController extends Controller
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
         }
     }
-
 }

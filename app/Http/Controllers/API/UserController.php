@@ -84,14 +84,12 @@ class UserController extends Controller
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
         }
     }
-
-    public function register(Request $request)
+ public function register(Request $request)
     {
         try {
             $validation = Validator::make($request->all(), [
                 'username' => 'required|string|unique:users',
                 'email' => 'required|string|email|unique:users',
-                // 'email' => 'required|string|email|unique:users,email',
                 'password' => ['required', 'min:8'],
                 'confirm_password' => ['required', 'same:password'],
                 'first_name' => 'required|string',
@@ -103,16 +101,27 @@ class UserController extends Controller
                 return $this->errorResponse(Status::INVALID_REQUEST, Message::VALIDATION_FAILURE, $validation->errors()->toArray());
             }
 
-            // $profilePicture = $request->file('profile_picture');
-            // // $profilePicturePath = 'uploads/' . basename($profilePicture->move(public_path('uploads'), $profilePicture->hashName()));
-            // $profilePicturePath = $request->file('profile_picture') ? $request->file('profile_picture')->store('uploads', 'public') : null;
-
             $profilePicturePath = null;
-            if ($request->hasFile('profile_picture')) {
-                $profilePicture = $request->file('profile_picture');
-                $uniqueFileName = time() . '_' . uniqid() . '.' . $profilePicture->getClientOriginalExtension();
-                $profilePicturePath = $profilePicture->storeAs('uploads', $uniqueFileName, 'public');
+
+        if ($request->hasFile('profile_picture')) {
+            $profilePicture = $request->file('profile_picture');
+            $uniqueFileName = time() . '_' . uniqid() . '.' . $profilePicture->getClientOriginalExtension();
+            $profilePicturePath = $profilePicture->storeAs('uploads', $uniqueFileName, 'public');
+
+            $sourcePath = storage_path('app/public/uploads/' . $uniqueFileName);
+            $publicPath = public_path('storage/uploads/' . $uniqueFileName);
+
+            if (!file_exists(dirname($publicPath))) {
+                mkdir(dirname($publicPath), 0755, true);
             }
+
+            if (file_exists($sourcePath)) {
+                copy($sourcePath, $publicPath);
+            }
+
+            $profilePicturePath = asset('storage/uploads/' . $uniqueFileName);
+        }
+
 
             $user = User::create([
                 'username' => $request->username,
@@ -125,9 +134,9 @@ class UserController extends Controller
                 'role' => 'user'
             ]);
 
-            return $this->successResponse(Status::OK, 'user registration was successfully', compact('user'));
+            return $this->successResponse(Status::OK, 'User registration was successful', compact('user'));
         } catch (\Illuminate\Database\QueryException $e) {
-            return $this->errorResponse(Status::INVALID_REQUEST, $e->getMessage());
+             return $this->errorResponse(Status::INVALID_REQUEST, $e->getMessage());
         } catch (\Exception $e) {
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
         }
@@ -233,6 +242,7 @@ class UserController extends Controller
         }
     }
 
+
     public function update(Request $request, $id)
     {
         try {
@@ -254,22 +264,35 @@ class UserController extends Controller
                 return $this->errorResponse(Status::INVALID_REQUEST, Message::VALIDATION_FAILURE, $validation->errors()->toArray());
             }
 
+
             if ($request->hasFile('profile_picture')) {
-                // Delete the old image if it exists
-                if ($user->profile_picture && file_exists(public_path($user->profile_picture))) {
-                    unlink(public_path($user->profile_picture));
+
+                if ($user->profile_picture) {
+
+                    $oldImagePath = str_replace(asset('/'), '', $user->profile_picture);
+                    if (file_exists(public_path($oldImagePath))) {
+                        unlink(public_path($oldImagePath));
+                    }
                 }
 
-                // Upload new image
                 $profilePicture = $request->file('profile_picture');
                 $profilePictureName = time() . '_' . $profilePicture->getClientOriginalName();
                 $profilePicturePath = $profilePicture->storeAs('uploads', $profilePictureName, 'public');
 
-                // Save new image path in database using asset()
-                $user->profile_picture = $profilePicturePath ? asset('storage/' . $profilePicturePath) : null;
+                $sourcePath = storage_path('app/public/uploads/' . $profilePictureName);
+                $publicPath = public_path('storage/uploads/' . $profilePictureName);
+
+                if (!file_exists(dirname($publicPath))) {
+                    mkdir(dirname($publicPath), 0755, true);
+                }
+
+                if (file_exists($sourcePath)) {
+                    copy($sourcePath, $publicPath);
+                }
+
+                $user->profile_picture = asset('storage/uploads/' . $profilePictureName);
             }
 
-            // Update user details except password
             $user->update($request->except(['password', 'profile_picture']));
 
             return $this->successResponse(Status::OK, 'User updated successfully', compact('user'));
