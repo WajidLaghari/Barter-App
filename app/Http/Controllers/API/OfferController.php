@@ -41,19 +41,19 @@ class OfferController extends Controller
                 'offered_item_ids.*' => 'exists:items,id|different:item_id',
                 'message_text' => 'nullable|string|max:1000',
             ]);
-    
+
             if ($validation->fails()) {
                 return $this->errorResponse(Status::INVALID_REQUEST, Message::VALIDATION_FAILURE, $validation->errors()->toArray());
             }
-    
+
             // Get the item that is being offered on
             $item = Item::find($request->item_id);
-    
+
             // Check if the item belongs to the authenticated user
             if ($item->user_id === auth()->id()) {
                 return $this->errorResponse(Status::INVALID_REQUEST, 'You cannot offer on your own item.');
             }
-    
+
             // Create the offer
             $offer = Offer::create([
                 'item_id' => $request->item_id,
@@ -61,10 +61,10 @@ class OfferController extends Controller
                 'message_text' => $request->message_text,
                 'status' => 'pending',
             ]);
-    
+
             // Attach the offered items to the offer
             $offer->offeredItems()->attach($request->offered_item_ids);
-    
+
             return $this->successResponse(Status::OK, 'Offer was created successfully', compact('offer'));
         } catch (\Exception $e) {
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');

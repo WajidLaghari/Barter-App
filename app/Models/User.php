@@ -73,4 +73,9 @@ class User extends Authenticatable
         return $this->hasMany(Notification::class);
     }
 
+    public function verification()
+    {
+        return $this->hasOne(UserVerification::class, 'user_id');
+    }
+
 }

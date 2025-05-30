@@ -66,6 +66,10 @@ Route::controller(UserController::class)->group(function () {
 
         #User Verification Route
         Route::post('/handle-verification/{id}', [UserVerificationController::class, 'handleVerification']);
+
+        Route::get('/pending-verified-users', [UserController::class, 'getPendingVerifiedUsers']);
+
+          Route::get('/admin/verification-documents/{userId}', [UserVerificationController::class, 'getVerificationDocuments']);
     });
 
     Route::middleware('auth:sanctum')->group(function () {
@@ -110,6 +114,6 @@ Route::controller(UserController::class)->group(function () {
 
         Route::get('/items/user/offered/on',[ItemController::class,'itemsUserOfferedOn']);
 
-        Route::put('/offers/{id}/respond', [OfferController::class, 'respondToOffer'])->middleware('auth:sanctum');
+        Route::put('/offers/{id}/respond', [OfferController::class, 'respondToOffer']);
     });
 });

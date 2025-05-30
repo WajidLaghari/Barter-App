@@ -84,7 +84,8 @@ class UserController extends Controller
             return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
         }
     }
- public function register(Request $request)
+
+    public function register(Request $request)
     {
         try {
             $validation = Validator::make($request->all(), [
@@ -103,24 +104,24 @@ class UserController extends Controller
 
             $profilePicturePath = null;
 
-        if ($request->hasFile('profile_picture')) {
-            $profilePicture = $request->file('profile_picture');
-            $uniqueFileName = time() . '_' . uniqid() . '.' . $profilePicture->getClientOriginalExtension();
-            $profilePicturePath = $profilePicture->storeAs('uploads', $uniqueFileName, 'public');
+            if ($request->hasFile('profile_picture')) {
+                $profilePicture = $request->file('profile_picture');
+                $uniqueFileName = time() . '_' . uniqid() . '.' . $profilePicture->getClientOriginalExtension();
+                $profilePicturePath = $profilePicture->storeAs('uploads', $uniqueFileName, 'public');
 
-            $sourcePath = storage_path('app/public/uploads/' . $uniqueFileName);
-            $publicPath = public_path('storage/uploads/' . $uniqueFileName);
+                $sourcePath = storage_path('app/public/uploads/' . $uniqueFileName);
+                $publicPath = public_path('storage/uploads/' . $uniqueFileName);
 
-            if (!file_exists(dirname($publicPath))) {
-                mkdir(dirname($publicPath), 0755, true);
+                if (!file_exists(dirname($publicPath))) {
+                    mkdir(dirname($publicPath), 0755, true);
+                }
+
+                if (file_exists($sourcePath)) {
+                    copy($sourcePath, $publicPath);
+                }
+
+                $profilePicturePath = asset('storage/uploads/' . $uniqueFileName);
             }
-
-            if (file_exists($sourcePath)) {
-                copy($sourcePath, $publicPath);
-            }
-
-            $profilePicturePath = asset('storage/uploads/' . $uniqueFileName);
-        }
 
 
             $user = User::create([
@@ -555,4 +556,27 @@ class UserController extends Controller
         }
     }
 
+    public function getPendingVerifiedUsers()
+    {
+        try {
+            $users = User::where('is_approved', 'pending')
+                ->whereHas('verification', function ($query) {
+                    $query->whereNotNull('profile_picture')
+                        ->whereNotNull('cnic_front')
+                        ->whereNotNull('cnic_back');
+                })
+                ->with(['verification' => function ($query) {
+                    $query->select('user_id', 'profile_picture', 'cnic_front', 'cnic_back');
+                }])
+                ->get(['id', 'username', 'email', 'is_approved']);
+
+            if ($users->isEmpty()) {
+                return $this->errorResponse(Status::NOT_FOUND, 'No pending verified users found.');
+            }
+
+            return $this->successResponse(Status::OK, 'Pending verified users fetched successfully', compact('users'));
+        } catch (\Exception $e) {
+            return $this->errorResponse(Status::INTERNAL_SERVER_ERROR, 'Something went wrong. Please try again.');
+        }
+    }
 }

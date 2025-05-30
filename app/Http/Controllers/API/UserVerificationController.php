@@ -54,6 +54,27 @@ class UserVerificationController extends Controller
         return $this->successResponse(Status::OK, 'Verification documents uploaded successfully. Please wait for admin approval.');
     }
 
+    public function getVerificationDocuments(Request $request, $userId)
+    {
+        $authUser = auth()->user();
+
+        if (!$authUser || $authUser->role !== 'admin') {
+            return $this->errorResponse(Status::UNAUTHORIZED, 'Only admins can access this resource.');
+        }
+
+        $verification = IsVerified::where('user_id', $userId)->first();
+
+        if (!$verification) {
+            return $this->errorResponse(Status::NOT_FOUND, 'Verification documents not found.');
+        }
+
+        return $this->successResponse(Status::OK, 'Verification documents fetched successfully.', [
+            'profile_picture' => asset('storage/' . $verification->profile_picture),
+            'cnic_front' => asset('storage/' . $verification->cnic_front),
+            'cnic_back' => asset('storage/' . $verification->cnic_back),
+        ]);
+    }
+
     public function handleVerification(Request $request, $id)
     {
         $verification = IsVerified::find($id);
